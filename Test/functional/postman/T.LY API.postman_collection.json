@@ -1,0 +1,528 @@
+{
+	"info": {
+		"_postman_id": "69e9215c-2efa-4c15-a2bd-11945ed48360",
+		"name": "T.LY API",
+		"description": "API documentation for T.LY URL Shortener, Custom Domain & Link Management",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Posts",
+			"item": [
+				{
+					"name": "Happy Path Scenarios",
+					"item": [
+						{
+							"name": "Shorten",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "5ad902a3-64a6-45b7-909e-318cb3eafdc7",
+										"exec": [
+											"moment = require(\"moment\");",
+											"",
+											"const responseBodyJsonData = pm.response.json();",
+											"",
+											"pm.test(\"Request body fields must equal their corresponding response body fields\", () => {",
+											"    pm.expect(request.data['long_url']).to.eql(responseBodyJsonData['long_url']);",
+											"    pm.expect(request.data['domain']).to.eql(responseBodyJsonData['domain']);",
+											"});",
+											"",
+											"pm.test(\"The newly created short link is returned and saved for future tests\", () => {",
+											"    const createdShortLink = responseBodyJsonData.short_url;",
+											"    pm.expect(createdShortLink).to.be.a(\"string\").and.to.contain(\"http\");",
+											"    // set this short_url that was created so we can expand it after",
+											"    pm.environment.set('createdShortLink', createdShortLink);",
+											"});",
+											"",
+											"pm.test(\"The newly created time stamp is returned and valid within the same minute\", () => {",
+											"    const createdTimeStamp = responseBodyJsonData.created_at;",
+											"    pm.expect(createdTimeStamp).to.be.a(\"string\");",
+											"    pm.expect(moment.utc(createdTimeStamp).isSame(moment(), 'minute')).to.be.true;",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "{{Accept}}"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "long_url",
+											"value": "http://example.com/",
+											"type": "text"
+										},
+										{
+											"key": "domain",
+											"value": "https://t.ly/",
+											"type": "text"
+										},
+										{
+											"key": "api_token",
+											"value": "xxxxxxxxx",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{host}}/shorten",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"shorten"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Expand",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "b0083368-ca35-42a8-8506-4c70644e84fe",
+										"exec": [
+											"const responseBodyJsonData = pm.response.json();",
+											"",
+											"pm.test(\"The expanded link is real\", () => {",
+											"    const expandedLink = responseBodyJsonData.long_url;",
+											"    pm.expect(expandedLink).to.be.a(\"string\");",
+											"    pm.expect(expandedLink).to.contain(\"http\");",
+											"    // set this long_url so we can test with it after",
+											"    pm.environment.set('expandedLink', expandedLink);",
+											"});",
+											"",
+											"pm.test(\"The expanded link is not expired\", () => {",
+											"    pm.expect(responseBodyJsonData.expired).to.be.false;",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "76b7845f-4058-417b-ae60-9b561134f697",
+										"exec": [
+											"const envCreatedShortLink = pm.variables.get(\"createdShortLink\");",
+											"const createdShortLink = !!envCreatedShortLink ? envCreatedShortLink : \"https://t.ly/OYXL\";",
+											"pm.environment.set(\"createdShortLink\", createdShortLink );"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "{{Accept}}"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "short_url",
+											"value": "{{createdShortLink}}",
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": "password123",
+											"type": "text"
+										},
+										{
+											"key": "api_token",
+											"value": "xxxxxxxxx",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{host}}/expand",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"expand"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "294379dd-d870-461d-a3b6-5d045dcd053d",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "5ad7808e-0c58-4cda-8b57-02338f5a868b",
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"response is ok\", () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response body should have 'long_url' field\", () => {",
+									"    pm.expect(pm.response.text()).to.include('long_url');",
+									"});"
+								]
+							}
+						}
+					],
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Error Scenarios",
+					"item": [
+						{
+							"name": "Shorten Missing long_url",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "1751d407-f7df-449c-a6ba-c632461bbcd9",
+										"exec": [
+											"pm.test(\"Error response body should have missing 'long_url' field indication\", () => {",
+											"    pm.expect(pm.response.text()).to.include('errors').and.to.include('long_url');",
+											"})"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "{{Accept}}"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "long_url",
+											"value": "http://example.com/",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "domain",
+											"value": "https://t.ly/",
+											"type": "text"
+										},
+										{
+											"key": "api_token",
+											"value": "xxxxxxxxx",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{host}}/shorten",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"shorten"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Expand Missing short_url",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "81a86f09-494d-49da-863f-4ad8799658ed",
+										"exec": [
+											"pm.test(\"Error response body should have missing 'short_url' field indication\", () => {",
+											"    pm.expect(pm.response.text()).to.include('errors').and.to.include('short_url');",
+											"})"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "{{Accept}}"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "short_url",
+											"value": "https://t.ly/OYXL",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "password",
+											"value": "password123",
+											"type": "text"
+										},
+										{
+											"key": "api_token",
+											"value": "xxxxxxxxx",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{host}}/expand",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"expand"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "d14ee99e-3943-46c6-a2ff-7955a0dca18a",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "5eed6fcd-482e-4bed-8176-78d19d6956a3",
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"response is error\", () => {",
+									"    pm.response.to.have.status(422);",
+									"});"
+								]
+							}
+						}
+					],
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "712264b3-115d-41d9-81a4-da7eb04d1768",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "435c4cf4-838d-4ec5-932e-30c8d7b684c8",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Gets",
+			"item": [
+				{
+					"name": "Happy Path Scenarios",
+					"item": [
+						{
+							"name": "Stats",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "eb2fcf25-d90f-4801-8573-7f025d24e2e1",
+										"exec": [
+											"const envCreatedShortLink = pm.variables.get(\"createdShortLink\");",
+											"const encodedCreatedShortLink = !!envCreatedShortLink ? encodeURIComponent(envCreatedShortLink) : \"https%3A%2F%2Ft.ly%2FOYXL\";",
+											"pm.environment.set(\"encodedCreatedShortLink\", encodedCreatedShortLink );"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"id": "d8c85948-65d8-4a49-96a4-caa37d03e0ea",
+										"exec": [
+											"pm.test(\"Response body should have 'clicks' field\", () => {",
+											"    pm.expect(pm.response.text()).to.include('clicks');",
+											"});",
+											"",
+											"pm.test(\"Response body should have 'browsers' field\", () => {",
+											"    pm.expect(pm.response.text()).to.include('browsers');",
+											"});",
+											"",
+											"pm.test(\"Response body should have 'countries' field\", () => {",
+											"    pm.expect(pm.response.text()).to.include('countries');",
+											"});",
+											"",
+											"pm.test(\"Response body should have 'referrers' field\", () => {",
+											"    pm.expect(pm.response.text()).to.include('referrers');",
+											"});",
+											"",
+											"pm.test(\"Response body should have 'platforms' field\", () => {",
+											"    pm.expect(pm.response.text()).to.include('platforms');",
+											"});",
+											"",
+											"pm.test(\"Response body should have 'data' field\", () => {",
+											"    pm.expect(pm.response.text()).to.include('data');",
+											"});",
+											"",
+											"pm.test(\"'short_url' of 'data' field should equal short link param\", () => {",
+											"    pm.expect(pm.response.json().data.short_url).to.eql(decodeURIComponent(pm.variables.get(\"encodedCreatedShortLink\")));",
+											"});",
+											"",
+											"pm.test(\"'long_url' of 'data' field should equal expanded link\", () => {",
+											"    pm.expect(pm.response.json().data.long_url).to.eql(pm.variables.get(\"expandedLink\"));",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "{{Accept}}"
+									}
+								],
+								"url": {
+									"raw": "{{host}}/stats?short_url={{encodedCreatedShortLink}}&api_token=xxxxxxxxx",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"stats"
+									],
+									"query": [
+										{
+											"key": "short_url",
+											"value": "{{encodedCreatedShortLink}}"
+										},
+										{
+											"key": "api_token",
+											"value": "xxxxxxxxx"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Error Scenarios",
+					"item": [
+						{
+							"name": "Stats Missing short_url",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "e7036e50-7000-4aaf-9e10-a28f62842cc6",
+										"exec": [
+											"pm.test(\"response is error\", () => {",
+											"    pm.response.to.have.status(422);",
+											"});",
+											"",
+											"pm.test(\"Error response body should have missing 'short_url' field indication\", () => {",
+											"    pm.expect(pm.response.text()).to.include('errors').and.to.include('short_url');",
+											"})"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "{{Accept}}"
+									}
+								],
+								"url": {
+									"raw": "{{host}}/stats?api_token=xxxxxxxxx",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"stats"
+									],
+									"query": [
+										{
+											"key": "short_url",
+											"value": "https%3A%2F%2Ft.ly%2FOYXL",
+											"disabled": true
+										},
+										{
+											"key": "api_token",
+											"value": "xxxxxxxxx"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"protocolProfileBehavior": {}
+}
