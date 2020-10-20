@@ -392,6 +392,10 @@
 									"script": {
 										"id": "d8c85948-65d8-4a49-96a4-caa37d03e0ea",
 										"exec": [
+											"pm.test(\"response is ok\", () => {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
 											"pm.test(\"Response body should have 'clicks' field\", () => {",
 											"    pm.expect(pm.response.text()).to.include('clicks');",
 											"});",

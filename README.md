@@ -1,0 +1,3 @@
+# Sample Test Suite for T.LY URL Shortening API
+
+To further explore test writing concepts, refer to [the Postman docs](https://learning.postman.com/docs/writing-scripts/test-scripts/) or this working Collection and Test Suite example. The GitHub repo contains the environment and collection for importing into Postman. It has the few happy path GET and POST calls as well as their error scenarios that are needed to test this public and free service called the [T.LY URL Shortening](https://t.ly/docs/) API. For the unaltered version, note that this service provided their own collection of calls which is located in the root directory here as `T.LY_provided_collection.json`.
